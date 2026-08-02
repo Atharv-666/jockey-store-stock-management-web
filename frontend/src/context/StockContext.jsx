@@ -35,10 +35,10 @@ export const StockProvider = ({ children }) => {
     }
   }, [theme]);
 
-  // Auth / User state
+  // Auth / User state - Defaults to NULL to force Login/Signup as the FIRST PAGE
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('userInfo');
-    return saved ? JSON.parse(saved) : { name: 'Jockey Employee', email: 'employee@jockey.com' };
+    return saved ? JSON.parse(saved) : null;
   });
 
   // Currency Formatter Helper (INR ₹)
@@ -79,8 +79,10 @@ export const StockProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
+    if (user) {
+      fetchAllData();
+    }
+  }, [user, fetchAllData]);
 
   // ACTION: Seed Sample Data
   const seedSampleData = async () => {
@@ -158,7 +160,7 @@ export const StockProvider = ({ children }) => {
     }
   };
 
-  // ACTION: Delete Product (Clean API call, no native browser confirm)
+  // ACTION: Delete Product
   const deleteProduct = async (id, name) => {
     try {
       const { data } = await axiosClient.delete(`/products/${id}`);

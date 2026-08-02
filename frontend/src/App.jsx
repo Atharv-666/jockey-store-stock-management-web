@@ -13,7 +13,30 @@ import AuthPage from './pages/AuthPage';
 import { Toaster } from 'react-hot-toast';
 
 const AppContent = () => {
-  const { activeTab, theme } = useStock();
+  const { user, activeTab, theme } = useStock();
+
+  // FIRST PAGE AUTHENTICATION GUARD: If user is not logged in, force AuthPage as the FIRST page
+  if (!user) {
+    return (
+      <div className={`min-h-screen transition-colors duration-200 ${
+        theme === 'light' ? 'bg-slate-50 text-slate-900' : 'bg-slate-950 text-slate-100 font-sans'
+      }`}>
+        <AuthPage />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: theme === 'light' ? '#ffffff' : '#0f172a',
+              color: theme === 'light' ? '#0f172a' : '#f8fafc',
+              border: theme === 'light' ? '1px solid #e2e8f0' : '1px solid #1e293b',
+              borderRadius: '12px',
+              fontSize: '13px',
+            },
+          }}
+        />
+      </div>
+    );
+  }
 
   const renderContent = () => {
     switch (activeTab) {
