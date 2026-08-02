@@ -158,17 +158,18 @@ export const StockProvider = ({ children }) => {
     }
   };
 
-  // ACTION: Delete Product
+  // ACTION: Delete Product (Clean API call, no native browser confirm)
   const deleteProduct = async (id, name) => {
-    if (!window.confirm(`Are you sure you want to remove "${name}" from stock?`)) return;
     try {
       const { data } = await axiosClient.delete(`/products/${id}`);
       if (data.success) {
-        toast.success(`Deleted ${name}`);
+        toast.success(`"${name || 'Product'}" removed from inventory`);
         await fetchAllData();
+        return { success: true };
       }
     } catch (error) {
       toast.error('Failed to delete product');
+      return { success: false };
     }
   };
 

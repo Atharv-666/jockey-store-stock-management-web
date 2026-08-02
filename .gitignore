@@ -1,3 +1,23 @@
-node_modules
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment Variables & Secrets (IMPORTANT)
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build Outputs
+dist/
+build/
+out/
+
+# Logs & Temporary Files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 .DS_Store
+Thumbs.db

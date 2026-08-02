@@ -1,7 +1,19 @@
 import axios from 'axios';
 
+// Sanitize production VITE_API_URL to prevent bracket or formatting syntax errors
+let rawApiUrl = import.meta.env.VITE_API_URL || '/api';
+
+if (typeof rawApiUrl === 'string') {
+  // Strip out stray square brackets [, ], or quotes from env input
+  rawApiUrl = rawApiUrl.replace(/[\[\]'"]/g, '').trim();
+  // Strip trailing slashes
+  if (rawApiUrl.endsWith('/')) {
+    rawApiUrl = rawApiUrl.slice(0, -1);
+  }
+}
+
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: rawApiUrl || '/api',
   headers: {
     'Content-Type': 'application/json',
   },

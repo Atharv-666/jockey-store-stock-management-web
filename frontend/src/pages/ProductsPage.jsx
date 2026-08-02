@@ -13,7 +13,7 @@ import {
   ArrowRight,
   RefreshCw,
   Image as ImageIcon,
-  Tag
+  AlertTriangle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -42,6 +42,7 @@ const ProductsPage = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [saleModalProduct, setSaleModalProduct] = useState(null);
   const [restockModalProduct, setRestockModalProduct] = useState(null);
+  const [deleteModalProduct, setDeleteModalProduct] = useState(null);
 
   // Add Product Form State
   const [name, setName] = useState('');
@@ -75,7 +76,6 @@ const ProductsPage = () => {
   useEffect(() => {
     if (category === 'Accessories') {
       setIsFreeSize(true);
-      // Ensure variants default size is Free-Size
       setVariantsList([
         { color: 'Black', size: 'Free-Size', stockQuantity: 15 },
         { color: 'Brown', size: 'Free-Size', stockQuantity: 10 },
@@ -141,7 +141,6 @@ const ProductsPage = () => {
       return;
     }
 
-    // Ensure all variants have valid stockQuantity
     const formattedVariants = variantsList.map((v) => ({
       color: v.color && v.color.trim() ? v.color.trim() : 'Standard',
       size: isFreeSize ? 'Free-Size' : (v.size || 'M'),
@@ -223,6 +222,19 @@ const ProductsPage = () => {
 
     if (res?.success) {
       setRestockModalProduct(null);
+    }
+  };
+
+  // Submit Custom Modal Delete Product
+  const handleConfirmDeleteProduct = async () => {
+    if (!deleteModalProduct) return;
+
+    setIsSubmitting(true);
+    const res = await deleteProduct(deleteModalProduct._id, deleteModalProduct.name);
+    setIsSubmitting(false);
+
+    if (res?.success) {
+      setDeleteModalProduct(null);
     }
   };
 
@@ -399,7 +411,7 @@ const ProductsPage = () => {
                       <div className="absolute top-3 right-3 flex flex-col gap-1 items-end">
                         {isOutOfStock && (
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-600 text-white shadow-lg">
-                            Out of Stock
+                            Sold Out (0 left)
                           </span>
                         )}
                         {isLowStock && (
@@ -425,12 +437,14 @@ const ProductsPage = () => {
                           <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20">
                             {product.subCategory}
                           </span>
+                          
+                          {/* Dedicated Custom Delete Modal Trigger */}
                           <button
-                            onClick={() => deleteProduct(product._id, product.name)}
-                            className="text-slate-400 hover:text-rose-500 transition-colors p-1"
-                            title="Delete product"
+                            onClick={() => setDeleteModalProduct(product)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+                            title="Delete product from store inventory"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                         <h4 className={`font-bold text-sm mt-1.5 line-clamp-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>{product.name}</h4>
@@ -963,6 +977,79 @@ const ProductsPage = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ----------------- MODAL 4: CUSTOM DELETE CONFIRMATION MODAL (NO BROWSER POPUP) ----------------- */}
+      {deleteModalProduct && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className={`border rounded-2xl p-6 w-full max-w-md shadow-2xl relative ${
+            isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-slate-900 border-slate-800 text-white'
+          }`}>
+            <button
+              onClick={() => setDeleteModalProduct(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-3 text-rose-500">
+              <div className="p-3 bg-rose-500/10 rounded-xl border border-rose-500/20">
+                <AlertTriangle className="w-6 h-6 text-rose-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">Remove Product from Stock?</h3>
+                <p className="text-xs text-rose-500 font-semibold">Irreversible Inventory Action</p>
+              </div>
+            </div>
+
+            {/* Product Preview Card */}
+            <div className={`p-3.5 rounded-xl border flex items-center gap-3 mb-4 ${
+              isLight ? 'bg-rose-50/60 border-rose-200' : 'bg-slate-800/80 border-slate-700/60'
+            }`}>
+              <img
+                src={deleteModalProduct.imageUrl}
+                alt={deleteModalProduct.name}
+                className="w-12 h-12 rounded-lg object-cover border border-slate-300 shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20">
+                  {deleteModalProduct.category} • {deleteModalProduct.subCategory}
+                </span>
+                <p className={`font-bold text-xs mt-1 truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {deleteModalProduct.name}
+                </p>
+                <p className="text-[11px] font-semibold text-emerald-600 mt-0.5">
+                  {formatCurrency(deleteModalProduct.price)}
+                </p>
+              </div>
+            </div>
+
+            <p className={`text-xs leading-relaxed mb-6 ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+              Are you sure you want to delete <strong className={isLight ? 'text-slate-900' : 'text-white'}>"{deleteModalProduct.name}"</strong>? This will permanently erase the product and all its color & size variant stock records from your Jockey store inventory.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteModalProduct(null)}
+                className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleConfirmDeleteProduct}
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-600/20 flex items-center gap-1.5 transition-all"
+              >
+                <Trash2 className="w-4 h-4" />
+                {isSubmitting ? 'Deleting...' : 'Yes, Delete Product'}
+              </button>
+            </div>
           </div>
         </div>
       )}
